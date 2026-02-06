@@ -9,12 +9,17 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import DepartmentAnalytics from "./pages/DepartmentAnalytics";
 import TeacherPerformance from "./pages/TeacherPerformance";
 
+import RoleSelection from "./components/RoleSelection";
+
 
 function App() {
   return (
     <Routes>
+
+      <Route path="/" element={<RoleSelection />} />
+
       {/* Public Routes */}
-      <Route path="/" element={<AdminLogin />} />
+      <Route path="/admin-login" element={<AdminLogin />} />
       <Route path="/signup" element={<AdminSignup />} />
 
       {/* Protected Dashboard Routes */}
