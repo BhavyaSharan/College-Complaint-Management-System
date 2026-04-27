@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "../supabaseClient";
 import { Link, useNavigate } from "react-router-dom";
+import Navbar from "../components/Navbar";
 
 export default function DeanDashboard() {
   const [complaints, setComplaints] = useState([]);
@@ -49,28 +50,12 @@ async function checkSession() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* ✅ NAVBAR */}
-      <nav className="w-full bg-gradient-to-r from-blue-600 to-purple-700 text-white px-8 py-4 flex justify-between items-center shadow-lg">
-        <h1 className="text-2xl font-bold tracking-wide">Dean Dashboard</h1>
-
-        <div className="flex gap-6 items-center">
-          {/* Profile */}
-          <Link
-            to="/profile"
-            className="px-4 py-2 border border-gray-400 bg-white text-black rounded-lg shadow-sm"
-          >
-            View Profile
-          </Link>
-
-          {/* Logout */}
-          <button
-            onClick={handleLogout}
-            className="bg-red-500 hover:bg-red-600 px-4 py-2 rounded-lg font-semibold"
-          >
-            Logout
-          </button>
-        </div>
-      </nav>
+      {/* ✅ Premium NAVBAR */}
+      <Navbar 
+        title="Dean Dashboard" 
+        role="Dean" 
+        onLogout={handleLogout} 
+      />
 
       {/* ✅ MAIN CONTENT */}
       <div className="p-8">
@@ -146,7 +131,10 @@ async function checkSession() {
                 >
                   <h3 className="font-bold">{c.title}</h3>
                   <p className="text-sm text-gray-600">
-                    Department: {c.department} | Status: {c.status}
+                    Department: {c.department} | Status:{" "}
+                    <span className="font-semibold text-blue-600">
+                      {c.status === "resolved_by_tech" ? "Waiting Student Conf" : c.status}
+                    </span>
                   </p>
                 </div>
               ))}

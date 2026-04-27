@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "../supabaseClient";
 import { Link, useNavigate } from "react-router-dom";
+import Navbar from "../components/Navbar";
 
 export default function TechnicianDashboard() {
   const [assignedComplaints, setAssignedComplaints] = useState([]);
@@ -54,44 +55,29 @@ async function checkSession() {
     setAssignedComplaints(complaints || []);
   }
 
-  // ✅ Mark Complaint as Resolved
+  // ✅ Mark Complaint as Resolved (Moves it to Student Confirmation)
   async function markResolved(complaintId) {
-    await supabase
+    const { error } = await supabase
       .from("complaints")
-      .update({
-        status: "resolved",
-      })
+      .update({ status: "resolved_by_tech" })
       .eq("id", complaintId);
 
-    loadTechnicianComplaints(); // refresh complaints
+    if (error) {
+      alert("Error marking resolved: " + error.message);
+    } else {
+      loadTechnicianComplaints(); // refresh complaints
+    }
   }
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* ✅ NAVBAR */}
-      <nav className="w-full bg-gradient-to-r from-green-600 to-teal-700 text-white px-8 py-4 flex justify-between items-center shadow-lg">
-        <h1 className="text-2xl font-bold tracking-wide">
-          Technician Dashboard ({technicianName})
-        </h1>
-
-        <div className="flex gap-6 items-center">
-          {/* ✅ Profile Button */}
-          <Link
-            to="/profile"
-            className="px-4 py-2 border border-gray-400 bg-white text-black rounded-lg shadow-sm"
-          >
-            View Profile
-          </Link>
-
-          {/* ✅ Logout Button */}
-          <button
-            onClick={handleLogout}
-            className="bg-red-500 hover:bg-red-600 px-4 py-2 rounded-lg font-semibold"
-          >
-            Logout
-          </button>
-        </div>
-      </nav>
+      {/* ✅ Premium NAVBAR */}
+      <Navbar 
+        title="Technician Dashboard" 
+        userName={technicianName}
+        role="Technician"
+        onLogout={handleLogout} 
+      />
 
       {/* ✅ MAIN CONTENT */}
       <div className="p-8">
@@ -117,7 +103,7 @@ async function checkSession() {
             <h3 className="text-lg font-bold text-gray-700">In Progress</h3>
             <p className="text-4xl font-bold text-yellow-500 mt-4">
               {
-                assignedComplaints.filter((c) => c.status !== "resolved")
+                assignedComplaints.filter((c) => c.status !== "resolved" && c.status !== "resolved_by_tech")
                   .length
               }
             </p>
@@ -125,9 +111,9 @@ async function checkSession() {
 
           {/* Resolved */}
           <div className="bg-white shadow-xl rounded-2xl p-6 hover:scale-105 transition">
-            <h3 className="text-lg font-bold text-gray-700">Resolved Faults</h3>
+            <h3 className="text-lg font-bold text-gray-700">Rectified (Pending Review)</h3>
             <p className="text-4xl font-bold text-blue-600 mt-4">
-              {assignedComplaints.filter((c) => c.status === "resolved").length}
+              {assignedComplaints.filter((c) => c.status === "resolved" || c.status === "resolved_by_tech").length}
             </p>
           </div>
         </div>
@@ -147,26 +133,34 @@ async function checkSession() {
               {assignedComplaints.map((c) => (
                 <div
                   key={c.id}
-                  className="p-4 border rounded-xl hover:bg-gray-50"
+                  className="p-4 border rounded-xl hover:bg-gray-50 flex justify-between items-center"
                 >
-                  <h3 className="font-bold text-gray-800">{c.title}</h3>
+                  <div>
+                    <h3 className="font-bold text-gray-800">{c.title}</h3>
 
-                  <p className="text-sm text-gray-600">
-                    Category: {c.category} | Status:{" "}
-                    <span className="font-semibold">{c.status}</span>
-                  </p>
+                    <p className="text-sm text-gray-600">
+                      Category: {c.category} | Status:{" "}
+                      <span className="font-semibold text-blue-600">{
+                        c.status === 'resolved_by_tech' ? 'Awaiting Student' : c.status
+                      }</span>
+                    </p>
+                  </div>
 
                   {/* ✅ Rectified Button */}
-                  {c.status !== "resolved" ? (
+                  {c.status === "assigned" || c.status === "pending" ? (
                     <button
                       onClick={() => markResolved(c.id)}
-                      className="mt-3 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
+                      className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 font-bold"
                     >
                       ✅ Mark as Rectified
                     </button>
+                  ) : c.status === "resolved_by_tech" ? (
+                    <p className="text-amber-500 font-bold bg-amber-50 px-3 py-1 rounded-lg">
+                      ⏳ Awaiting Student
+                    </p>
                   ) : (
-                    <p className="text-green-600 font-semibold mt-3">
-                      ✅ Complaint Resolved Successfully
+                    <p className="text-green-600 font-bold bg-green-50 px-3 py-1 rounded-lg">
+                      🎉 Fully Resolved!
                     </p>
                   )}
                 </div>

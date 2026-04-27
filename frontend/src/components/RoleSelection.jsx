@@ -1,37 +1,35 @@
-import React from "react";
+import React, { useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import Particles from "react-tsparticles";
+import { loadFull } from "tsparticles";
 
 const RoleSelection = () => {
   const navigate = useNavigate();
+
+  const particlesInit = useCallback(async (engine) => {
+    await loadFull(engine);
+  }, []);
 
   return (
     <div className="relative min-h-screen flex items-center justify-center overflow-hidden bg-blue-600">
 
       {/* PARTICLE BACKGROUND */}
       <Particles
+        init={particlesInit}
         className="absolute inset-0 z-0"
         options={{
-          background: {
-            color: {
-              value: "transparent",
-            },
-          },
+          fullScreen: { enable: false }, // VERY IMPORTANT
+          background: { color: "transparent" },
           fpsLimit: 60,
           interactivity: {
             events: {
-              onHover: {
-                enable: true,
-                mode: "repulse",
-              },
+              onHover: { enable: true, mode: "repulse" },
               resize: true,
             },
           },
           particles: {
-            color: {
-              value: "#ffffff",
-            },
+            color: { value: "#ffffff" },
             links: {
               enable: true,
               color: "#ffffff",
@@ -42,32 +40,21 @@ const RoleSelection = () => {
             move: {
               enable: true,
               speed: 1,
-              outModes: {
-                default: "bounce",
-              },
+              outModes: { default: "bounce" },
             },
             number: {
               value: 80,
-              density: {
-                enable: true,
-                area: 800,
-              },
+              density: { enable: true, area: 800 },
             },
-            opacity: {
-              value: 0.6,
-            },
-            shape: {
-              type: "circle",
-            },
-            size: {
-              value: { min: 1, max: 3 },
-            },
+            opacity: { value: 0.6 },
+            shape: { type: "circle" },
+            size: { value: { min: 1, max: 3 } },
           },
           detectRetina: true,
         }}
       />
 
-      {/* CARD (ON TOP) */}
+      {/* CARD */}
       <motion.div
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}

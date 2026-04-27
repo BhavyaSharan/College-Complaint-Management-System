@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "../supabaseClient";
 import { Link, useNavigate } from "react-router-dom";
+import Navbar from "../components/Navbar";
 
 export default function HodDashboard() {
   const [complaints, setComplaints] = useState([]);
@@ -107,31 +108,12 @@ async function checkSession() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* ✅ NAVBAR */}
-      <nav className="w-full bg-gradient-to-r from-blue-600 to-purple-700 text-white px-8 py-4 flex justify-between items-center shadow-lg">
-        <h1 className="text-2xl font-bold tracking-wide">
-          HOD Dashboard ({department})
-        </h1>
-
-        <div className="flex gap-6 items-center">
-
-          {/* Profile */}
-          <Link
-            to="/profile"
-            className="px-4 py-2 border border-gray-400 bg-white text-black rounded-lg shadow-sm"
-
-          >
-            View Profile
-          </Link>
-
-          <button
-            onClick={handleLogout}
-            className="bg-red-500 hover:bg-red-600 px-4 py-2 rounded-lg font-semibold"
-          >
-            Logout
-          </button>
-        </div>
-      </nav>
+      {/* ✅ Premium NAVBAR */}
+      <Navbar 
+        title={`HOD Dashboard (${department})`}
+        role="HOD"
+        onLogout={handleLogout} 
+      />
 
       {/* ✅ MAIN CONTENT */}
       <div className="p-8">
@@ -175,42 +157,58 @@ async function checkSession() {
                   <h3 className="font-bold text-gray-800">{c.title}</h3>
 
                   <p className="text-sm text-gray-600">
-                    Category: {c.category} | Status: {c.status}
+                    Category: {c.category} | Status:{" "}
+                    <span className="font-semibold">{
+                      c.status === 'resolved_by_tech' ? 'Waiting Student Confirmation' : c.status
+                    }</span>
                   </p>
 
-                  {/* ✅ Technician Dropdown */}
-                  <select
-                    value={selectedTech[c.id] || ""}
-                    onChange={(e) =>
-                      setSelectedTech({
-                        ...selectedTech,
-                        [c.id]: e.target.value,
-                      })
-                    }
-                    className="mt-3 px-3 py-2 border border-gray-400 bg-white text-black rounded-lg"
-                    disabled={c.status === "assigned"}
-                  >
-                    <option value="">Select Technician</option>
-                    {technicians.map((t) => (
-                      <option key={t.id} value={t.id}>
-                        {t.name}
-                      </option>
+                  {/* ✅ Logic Matrix */}
+                  {c.status === "pending" && (
+                    <div className="mt-3 flex gap-3">
+                      <select
+                        value={selectedTech[c.id] || ""}
+                        onChange={(e) =>
+                          setSelectedTech({
+                            ...selectedTech,
+                            [c.id]: e.target.value,
+                          })
+                        }
+                        className="px-3 py-2 border border-gray-400 bg-white text-black rounded-lg"
+                      >
+                        <option value="">Select Technician</option>
+                        {technicians
+                      .filter((t) => t.department === c.category)
+                      .map((t) => (
+                        <option key={t.id} value={t.id}>
+                          {t.name} (Available)
+                        </option>
                     ))}
-                  </select>
+                      </select>
+                      <button
+                        onClick={() => assignTechnician(c.id)}
+                        className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                      >
+                        Assign
+                      </button>
+                    </div>
+                  )}
 
-                  {/* ✅ Assign Button */}
-                  <button
-                    onClick={() => assignTechnician(c.id)}
-                    disabled={c.status === "assigned"}
-                    className="ml-3 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400"
-                  >
-                    Assign
-                  </button>
-
-                  {/* ✅ Assigned Message */}
                   {c.status === "assigned" && (
+                    <p className="text-blue-600 font-semibold mt-2">
+                       👨‍🔧 Assigned & In Progress
+                    </p>
+                  )}
+
+                  {c.status === "resolved_by_tech" && (
+                    <p className="text-amber-500 font-semibold mt-2">
+                       ⏳ Waiting for Student Confirmation
+                    </p>
+                  )}
+
+                  {c.status === "resolved" && (
                     <p className="text-green-600 font-semibold mt-2">
-                      ✅ Assigned Successfully
+                       ✅ Fully Resolved
                     </p>
                   )}
                 </div>

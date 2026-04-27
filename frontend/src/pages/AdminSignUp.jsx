@@ -11,11 +11,20 @@ const AdminSignup = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [secretCode, setSecretCode] = useState(""); // ✅ Added Secret Code State
+  const [technicianField, setTechnicianField] = useState(""); // ✅ Technician Specialty
 
   const departments = ["AIML","AI","CSBS","CSE","DS","IOT","IT","ECE","ME"];
+  const techFields = ["Infrastructure", "Lab Equipment", "Classroom", "Washroom", "Other"];
 
   const handleSignup = async (e) => {
     e.preventDefault();
+
+    // ✅ Email domain check
+    if (!email.endsWith("@niet.co.in")) {
+      toast.error("Please use your official @niet.co.in email address ❌");
+      return;
+    }
 
     // ✅ Password match check
     if (password !== confirmPassword) {
@@ -25,19 +34,16 @@ const AdminSignup = () => {
 
     toast.loading("Creating Admin Account...");
 
-    // ✅ Step 1: Check if email is pre-approved
-    const { data: allowed } = await supabase
-      .from("allowed_admins")
-      .select("*")
-      .eq("email", email);
-
-    if (!allowed || allowed.length === 0) {
+    // ✅ Secret Invite Code Validation (Replaces 'allowed_admins' DB)
+    const CORRECT_SECRET_CODE = "NIET-ADMIN-2024"; // You can change this anytime!
+    
+    if (secretCode !== CORRECT_SECRET_CODE) {
       toast.dismiss();
-      toast.error("Email not authorized by college ❌");
+      toast.error("Invalid Secret Invite Code ❌");
       return;
     }
 
-    // ✅ Step 2: Create Supabase Auth User
+    // ✅ Step 1: Create Supabase Auth User
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
@@ -51,21 +57,18 @@ const AdminSignup = () => {
 
     const userId = data.user.id;
 
-    // ✅ Get role + department from allowed_admins
-const allowedAdmin = allowed[0];
+    // ✅ Step 2: Insert profile into admin_profiles using dropdown selections
+    await supabase.from("admin_profiles").insert([
+      {
+        id: userId,
+        name: name,
+        role: role, 
+        department: role === "HOD" ? department : role === "Technician" ? technicianField : null,
+      },
+    ]);
 
-// ✅ Insert profile in admin_profiles
-await supabase.from("admin_profiles").insert([
-  {
-    id: userId,
-    name: name,
-    role: allowedAdmin.role,
-    department: allowedAdmin.department,
-  },
-]);
-
-toast.dismiss();
-toast.success("Signup Successful ✅ Please Login Now");
+    toast.dismiss();
+    toast.success("Signup Successful ✅ Please Login Now");
 
 
   };
@@ -111,6 +114,24 @@ toast.success("Signup Successful ✅ Please Login Now");
               />
             </div>
 
+            {/* Secret Code */}
+            <div>
+              <label className="block font-medium text-gray-700 mb-2">
+                Secret Invitation Code
+              </label>
+              <input
+                type="text"
+                placeholder="e.g. NIET-ADMIN-2024"
+                value={secretCode}
+                onChange={(e) => setSecretCode(e.target.value)}
+                required
+                className="w-full px-4 py-3 border border-purple-300 
+                bg-purple-50 text-black rounded-lg placeholder-purple-300 
+                focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none"
+              />
+              <p className="text-xs text-gray-400 mt-1">Required to authorize staff creation.</p>
+            </div>
+
             {/* Role */}
             <div>
               <label className="block font-medium text-gray-700 mb-2">
@@ -148,6 +169,30 @@ toast.success("Signup Successful ✅ Please Login Now");
                   {departments.map((dept, i) => (
                     <option key={i} value={dept}>
                       {dept}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+
+            {/* Field Only for Technician */}
+            {role === "Technician" && (
+              <div>
+                <label className="block font-medium text-gray-700 mb-2">
+                  Select Specialty / Field
+                </label>
+                <select
+                  value={technicianField}
+                  onChange={(e) => setTechnicianField(e.target.value)}
+                  required
+                  className="w-full px-4 py-3 border border-gray-400 
+                  bg-white text-black rounded-lg 
+                  focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                >
+                  <option value="">-- Choose Specialty --</option>
+                  {techFields.map((field, i) => (
+                    <option key={i} value={field}>
+                      {field}
                     </option>
                   ))}
                 </select>
